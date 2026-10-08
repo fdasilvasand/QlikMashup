@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="shortcut icon" type="image/x-icon" href="https://getdrawings.com/icon-images/transparent-website-icon-17.png">
+<title>Qlik Mashup Demo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap">
+
+<script
+  crossorigin="anonymous"
+  type="application/javascript"
+  src="https://cdn.jsdelivr.net/npm/@qlik/embed-web-components"
+  data-host="https://sandcloud.eu.qlikcloud.com"
+  data-client-id="01a11a2d71e426f7bd594c9318210ecd"
+  data-redirect-uri="https://github.com/fdasilvasand/QlikMashup/oauth-callback.html"
+  data-access-token-storage="session"
+  data-auth-type="Oauth2"
+  data-auto-redirect="true"
+></script>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin:0; padding:0; height:100%; font-family: 'Inter', system-ui, sans-serif; font-size:15px; }
+  qlik-embed { font-size: initial !important; }
+  #app-shell { display:flex; flex-direction:column; width:100%; height:100vh; height:100dvh; overflow:hidden; }
+  #global-header { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; flex-shrink:0; min-height:40px; border-bottom:1px solid rgba(0,0,0,.08); position:relative; z-index:20; }
+  #global-header .gh-zone { display:flex; align-items:center; gap:8px; min-width:0; }
+  #global-header .gh-zone.left { flex:1; justify-content:flex-start; }
+  #global-header .gh-zone.right { flex:1; justify-content:flex-end; }
+  #global-header .gh-zone.center { flex-shrink:0; }
+  #global-header .gh-group { display:flex; align-items:center; gap:6px; min-width:0; }
+  #global-header .gh-text { font-size:max(15px,12px); font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#F7F8FA; }
+  #global-header .logo-img { height:20px; max-width:80px; object-fit:contain; }
+  #global-header .extra-img { height:20px; width:20px; object-fit:cover; border-radius:4px; }
+  #global-header .icon-btn { background:transparent; }
+  #tabs-viewport { position:relative; flex:1; overflow:hidden; }
+  .tab-section { position:absolute; inset:0; display:flex; flex-direction:column; overflow:hidden; }
+  .tab-content { flex:1; overflow-y:auto; position:relative; display:flex; flex-direction:column; }
+  .hero { position:relative; overflow:hidden; }
+  .icon-btn { width:40px; height:40px; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; background:transparent; color:inherit; }
+  .overlay-btn { position:absolute; z-index:5; width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,.35); color:#fff; border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .next-btn { top:12px; right:12px; }
+  .shortcut-cards { padding: 4px 16px 16px; }
+  .shortcut-card { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid; cursor:pointer; }
+  .shortcut-card .num { font-size:max(15px,11px); font-weight:800; display:block; }
+  .shortcut-card .name { font-weight:700; }
+  .info-popup { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:70; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .info-popup-inner { border-radius:16px; padding:20px; max-width:320px; position:relative; font-size:max(15px,13px); line-height:1.6; box-shadow:0 20px 40px rgba(0,0,0,.35); }
+  .info-popup-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; margin-bottom:10px; }
+  .popup-close { position:absolute; top:10px; right:12px; border:none; background:none; font-size:20px; line-height:1; opacity:.7; cursor:pointer; color:inherit; }
+  .analytics-header { flex-shrink:0; position:relative; z-index:10; display:flex; align-items:center; justify-content:space-between; padding:10px 12px; }
+  .analytics-header .header-left, .analytics-header .header-right { display:flex; gap:6px; align-items:center; color:inherit; }
+  .header-title-wrap { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .header-title { font-weight:700; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .header-subtitle { color:#9CA3AF; margin-top:1px; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .objects-grid { display:flex; flex-direction:column; gap:15px; padding:10px; flex:1 0 auto; }
+  .objects-row { display:flex; flex-wrap:wrap; align-items:stretch; gap:8px; }
+  .obj-embed-wrap { display:block; }
+  .obj-embed-wrap qlik-embed { width:100%; height:100%; display:block; }
+  .obj-expand-btn { position:absolute; top:6px; right:6px; z-index:5; width:26px; height:26px; border-radius:6px; border:none; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; }
+  .obj-embed-wrap.obj-expanded { position:fixed !important; margin:0 !important; left:0; right:0; top:var(--global-header-h, 48px); bottom:0; width:100% !important; height:auto !important; flex:none !important; z-index:40; border-radius:0 !important; border:none !important; }
+  .obj-minimized { border-radius:8px; overflow:hidden; position:relative; }
+  .obj-minimized-toggle { width:100%; min-height:56px; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px; background:none; border:none; cursor:pointer; text-align:left; color:inherit; }
+  .obj-min-text { display:flex; flex-direction:column; min-width:0; flex:1; overflow:hidden; }
+  .obj-min-title, .obj-min-desc { display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .obj-min-title { font-size:max(15px,14px); font-weight:700; }
+  .obj-min-desc { font-size:min(max(15px,11px),14px); opacity:.7; }
+  .obj-min-body { display:none; padding:0 10px 10px; }
+  .obj-close-btn { display:none; position:absolute; top:8px; right:8px; width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,.5); color:#fff; border:none; font-size:22px; line-height:1; cursor:pointer; z-index:45; align-items:center; justify-content:center; }
+  .obj-minimized.obj-expanded { position:fixed !important; left:0; right:0; top:var(--global-header-h,48px); bottom:0; z-index:41; background:#fff !important; border-radius:0 !important; border-left:none !important; display:flex; flex-direction:column; flex:none !important; max-width:none !important; align-self:auto !important; }
+  .obj-minimized.obj-expanded .obj-minimized-toggle { display:none; }
+  .obj-minimized.obj-expanded .obj-min-body { display:block !important; flex:1; padding:0; }
+  .obj-minimized.obj-expanded .obj-embed-wrap { width:100% !important; height:100% !important; min-height:0 !important; border:none !important; border-radius:0 !important; background:transparent !important; }
+  .obj-minimized.obj-expanded .obj-close-btn { display:flex; }
+  .filter-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:64; display:none; }
+  .filter-backdrop.open { display:block; }
+  .filter-panel { position:fixed; top:0; bottom:0; right:0; max-width:92vw; height:100%; background:#fff; z-index:65; display:none; flex-direction:column; box-shadow:-4px 0 16px rgba(0,0,0,.25); }
+  .filter-panel.open { display:flex; }
+  .filter-header { flex-shrink:0; display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid #eee; font-weight:700; }
+  .filter-close { border:none; background:none; font-size:20px; cursor:pointer; }
+  .filter-body { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .filter-body qlik-embed { width:100%; height:100%; display:block; }
+  .filter-main-object { flex:1; min-height:0; position:relative; }
+  .filter-main-embed { width:100%; height:100%; }
+  .header-filter-btn-slot { width:40px; height:40px; flex-shrink:0; overflow:hidden; background:transparent; display:flex; align-items:center; justify-content:center; }
+  .header-filter-btn-slot qlik-embed { width:100%; height:100%; display:block; }
+  #global-filter-buttons { display:none; align-items:center; gap:6px; }
+  .app-footer { flex-shrink:0; display:flex; background:rgba(255,255,255,.97); border-top:1px solid rgba(0,0,0,.08); }
+  .footer-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 0; background:none; border:none; font-size:max(15px,10px); color:#94a3b8; cursor:pointer; }
+  .footer-item .ficon { display:flex; }
+  .footer-item.active { color:var(--icon-color, #00693A); font-weight:700; }
+  .footer-item.active .ficon { color:var(--icon-color, #009845); }
+  .hidden-menu-panel { position:fixed; top:0; bottom:0; left:0; width:min(78%,300px); background:#161616; z-index:60; display:flex; flex-direction:column; transform:translateX(-100%); transition:transform .25s ease; }
+  .hidden-menu-panel.open { transform:translateX(0); }
+  .hidden-menu-head { display:flex; align-items:center; justify-content:space-between; padding:16px; border-bottom:1px solid rgba(255,255,255,.08); flex-shrink:0; }
+  .hidden-menu-title { font-size:max(15px,12px); font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--icon-color,#009845); }
+  .hidden-menu-close { background:none; border:none; cursor:pointer; display:flex; padding:0; }
+  .hidden-menu-list { flex:1; overflow-y:auto; }
+  .hidden-menu-item { display:flex; align-items:center; gap:10px; padding:14px 16px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,.06); }
+  .hidden-menu-item .micon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:var(--icon-color,#009845); color:#1a1a1a; }
+  .hidden-menu-item .mlabel { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:max(15px,13px); font-weight:600; color:#f5f5f5; }
+  .hidden-menu-item .mchev { color:var(--icon-color,#009845); flex-shrink:0; }
+  .hidden-menu-item.active .micon { background:var(--active-icon-bg,#fff); color:#1a1a1a; }
+  .hidden-menu-item.active .mlabel { color:var(--icon-color,#009845); font-weight:700; }
+  .menu-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:59; display:none; }
+  .menu-backdrop.open { display:block; }
+  @media (orientation: landscape) { #app-shell { height:100vh; height:100dvh; } }
+</style>
+</head>
+<body>
+<div id="app-shell">
+  <div id="global-header" style="background:#002A2C;color:#F7F8FA;">
+    <div class="gh-zone left"><button class="icon-btn" id="global-menu-btn" onclick="toggleHiddenMenu()" style="display:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button><span class="gh-group"><img class="logo-img" src="https://getdrawings.com/icon-images/transparent-website-icon-17.png" alt="logo"><span class="gh-text">QlikMashupDemo</span></span></div>
+    <div class="gh-zone center"></div>
+    <div class="gh-zone right"><button class="icon-btn" id="global-filter-btn" style="display:none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button><button class="icon-btn" id="global-info-btn" style="display:none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button></div>
+  </div>
+  <div id="tabs-viewport">
+<section class="tab-section" id="tab-0" style="background:#FFFFFF;color:#1E1E1E;display:flex;">
+  <div class="tab-content">
+    <div class="hero" style="flex:0 0 55%;">
+      <div style="position:absolute;inset:0;background:linear-gradient(135deg, #F7F8FA, #FFFFFF);"></div>
+      <div class="hero-text" style="position:relative;z-index:2;display:flex;flex-direction:column;height:100%;padding:20px;justify-content:flex-end;align-items:flex-start;text-align:left;">
+        <h1 style="font-size:26px;font-weight:800;margin:0;">Bienvenido</h1>
+        <p style="font-size:max(15px, 13px);opacity:.85;margin-top:6px;max-width:85%;">Explora tus datos desde el móvil</p>
+        
+      </div>
+      <button class="overlay-btn next-btn" onclick="nextTab(0)" aria-label="Siguiente"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+    </div>
+    
+    <div class="shortcut-cards"><div class="shortcut-card" style="border-color:#E0E0E0" onclick="showTab(1)"><div><span class="num" style="color:#009845">01</span><div class="name" style="font-size:max(15px, 15px);"></div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#009845" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div><div class="shortcut-card" style="border-color:#E0E0E0" onclick="showTab(2)"><div><span class="num" style="color:#009845">02</span><div class="name" style="font-size:max(15px, 15px);"></div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#009845" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div><div class="shortcut-card" style="border-color:#E0E0E0" onclick="showTab(3)"><div><span class="num" style="color:#009845">03</span><div class="name" style="font-size:max(15px, 15px);"></div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#009845" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div></div>
+    
+  </div>
+</section>
+<section class="tab-section" id="tab-1" style="background:#FFFFFF;color:#1E1E1E;display:none;">
+  <div class="analytics-header" style="background:#FFFFFF;color:#1E1E1E;border-bottom:1px solid #E0E0E0;">
+    <div class="header-left"><button class="icon-btn" onclick="prevTab(1)" aria-label="Anterior"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg></button></div>
+    <div class="header-title-wrap">
+      <span class="header-title" style="font-size:max(15px, 14px);"></span>
+      
+    </div>
+    <div class="header-right"><button class="icon-btn" onclick="nextTab(1)" aria-label="Siguiente"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg></button></div>
+  </div>
+  <div class="tab-content">
+    <div class="objects-grid" style="gap:15px;"><div class="objects-row" style="flex:0 0 30%;min-height:150px;"><div class="obj-embed-wrap" id="obj-arlsklk" style="flex:1 1 0%;min-width:0;background:#F7F8FA;border:1px solid #F7F8FA;position:relative;border-radius:6px;overflow:hidden;"><qlik-embed ui="analytics/chart" app-id="99d15b96-74b3-4309-80e1-4906b57c1384" object-id="5f0f3ede-ffb6-4929-971b-e1356f8014e0"></qlik-embed></div></div>
+<div class="objects-row" style="flex:0 0 30%;min-height:150px;"><div class="obj-embed-wrap" id="obj-jlexsl4" style="flex:1 1 0%;min-width:0;background:#F7F8FA;border:none;position:relative;border-radius:6px;overflow:hidden;"><qlik-embed ui="analytics/chart" app-id="99d15b96-74b3-4309-80e1-4906b57c1384" object-id="b4f76297-cc24-493e-af0e-c250ab92d207"></qlik-embed></div></div>
+<div class="objects-row" style="flex:0 0 30%;min-height:150px;"><div class="obj-embed-wrap" id="obj-7nukeqo" style="flex:1 1 0%;min-width:0;background:#F7F8FA;border:none;position:relative;border-radius:6px;overflow:hidden;"><qlik-embed ui="analytics/chart" app-id="99d15b96-74b3-4309-80e1-4906b57c1384" object-id="b4f76297-cc24-493e-af0e-c250ab92d207"></qlik-embed></div></div></div>
+  </div>
+</section>
+<section class="tab-section" id="tab-2" style="background:#FFFFFF;color:#1E1E1E;display:none;">
+  <div class="analytics-header" style="background:#FFFFFF;color:#1E1E1E;border-bottom:1px solid #E0E0E0;">
+    <div class="header-left"><button class="icon-btn" onclick="prevTab(2)" aria-label="Anterior"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg></button></div>
+    <div class="header-title-wrap">
+      <span class="header-title" style="font-size:max(15px, 14px);"></span>
+      
+    </div>
+    <div class="header-right"><button class="icon-btn" onclick="nextTab(2)" aria-label="Siguiente"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg></button></div>
+  </div>
+  <div class="tab-content">
+    <div class="objects-grid" style="gap:15px;"><div class="objects-row" style="flex:0 0 auto;min-height:300px;"><div class="obj-embed-wrap" id="obj-cqn91y0" style="flex:1 1 0%;min-width:0;background:#F7F8FA;border:none;position:relative;border-radius:6px;overflow:hidden;"><button class="obj-expand-btn" onclick="toggleExpand('cqn91y0')" aria-label="Ampliar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button><qlik-embed ui="analytics/chart" app-id="99d15b96-74b3-4309-80e1-4906b57c1384" object-id="908d1941-699f-42ab-8236-4e49ec6f0608"></qlik-embed></div></div></div>
+  </div>
+</section>
+<section class="tab-section" id="tab-3" style="background:#FFFFFF;color:#1E1E1E;display:none;">
+  <div class="analytics-header" style="background:#FFFFFF;color:#1E1E1E;border-bottom:1px solid #E0E0E0;">
+    <div class="header-left"><button class="icon-btn" onclick="prevTab(3)" aria-label="Anterior"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 18l-6-6 6-6"/></svg></button></div>
+    <div class="header-title-wrap">
+      <span class="header-title" style="font-size:max(15px, 14px);"></span>
+      
+    </div>
+    <div class="header-right"><button class="icon-btn" onclick="nextTab(3)" aria-label="Siguiente"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18l6-6-6-6"/></svg></button></div>
+  </div>
+  <div class="tab-content">
+    <div class="objects-grid" style="gap:15px;"><div class="objects-row" style="flex:0 0 40%;min-height:150px;"><div class="obj-embed-wrap" id="obj-il2go7e" style="flex:1 1 0%;min-width:0;background:#F7F8FA;border:none;position:relative;border-radius:6px;overflow:hidden;"><button class="obj-expand-btn" onclick="toggleExpand('il2go7e')" aria-label="Ampliar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button><qlik-embed ui="analytics/chart" app-id="99d15b96-74b3-4309-80e1-4906b57c1384" object-id="8eca69f3-c955-4db8-bea7-fb50683854c8"></qlik-embed></div></div>
+<div class="objects-row" style="flex:0 0 40%;min-height:150px;"><div class="obj-embed-wrap" id="obj-5vp13uq" style="flex:1 1 0%;min-width:0;background:#F7F8FA;border:none;position:relative;border-radius:6px;overflow:hidden;"><button class="obj-expand-btn" onclick="toggleExpand('5vp13uq')" aria-label="Ampliar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button><qlik-embed ui="analytics/chart" app-id="99d15b96-74b3-4309-80e1-4906b57c1384" object-id="1f8de4fc-69ca-47df-b043-eef500d2c004"></qlik-embed></div></div></div>
+  </div>
+</section>
+  </div>
+  <nav class="app-footer" id="app-footer" style="--icon-color:#002A2C;">
+  <button class="footer-item" data-idx="0" onclick="showTab(0)"><span class="ficon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg></span><span></span></button>
+  <button class="footer-item" data-idx="1" onclick="showTab(1)"><span class="ficon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span></span></button>
+  <button class="footer-item" data-idx="2" onclick="showTab(2)"><span class="ficon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></span><span></span></button>
+  <button class="footer-item" data-idx="3" onclick="showTab(3)"><span class="ficon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span><span></span></button>
+</nav>
+</div>
+
+
+<div class="filter-panel" id="global-filter-panel" style="width:290px;"><div class="filter-header"><span>Filtros</span><button class="filter-close" onclick="toggleFilterPanel()">&times;</button></div><div class="filter-body"><div class="filter-main-object"><div class="filter-main-embed" data-lazy-embed data-ui="analytics/chart" data-object-id="16eee48b-fea2-4087-8a9f-9aceb089e9e2" data-app-id="99d15b96-74b3-4309-80e1-4906b57c1384"></div></div></div></div>
+<div class="filter-backdrop" id="filter-backdrop"></div>
+<script>
+  const TAB_COUNT = 4;
+  const TAB_META = [{"id":"4un0ylv","infoEnabled":false,"isWelcome":true},{"id":"qslr73n","infoEnabled":false,"isWelcome":false},{"id":"cyx5qme","infoEnabled":false,"isWelcome":false},{"id":"53shpq3","infoEnabled":false,"isWelcome":false}];
+  const FILTER_ENABLED = true;
+  let currentIdx = 0;
+
+  function recomputeHeaderHeight() {
+    requestAnimationFrame(() => {
+      const gh = document.getElementById('global-header');
+      const ghH = gh ? gh.offsetHeight : 0;
+      const activeSection = document.getElementById('tab-' + currentIdx);
+      const arow = activeSection ? activeSection.querySelector('.analytics-header') : null;
+      document.documentElement.style.setProperty('--global-header-h', ghH + 'px');
+      document.documentElement.style.setProperty('--header-h', (ghH + (arow ? arow.offsetHeight : 0)) + 'px');
+    });
+  }
+
+  function mountEmbed(container) {
+    if (!container || container.dataset.mounted === '1') return;
+    var el = document.createElement('qlik-embed');
+    el.setAttribute('ui', container.dataset.ui);
+    el.setAttribute('app-id', container.dataset.appId || '');
+    if (container.dataset.objectId) el.setAttribute('object-id', container.dataset.objectId);
+    container.appendChild(el);
+    container.dataset.mounted = '1';
+  }
+  function mountAllIn(scope) {
+    if (!scope) return;
+    scope.querySelectorAll('[data-lazy-embed]').forEach(mountEmbed);
+  }
+
+  function showTab(idx) {
+    currentIdx = idx;
+    for (let i = 0; i < TAB_COUNT; i++) { const el = document.getElementById('tab-' + i); if (el) el.style.display = (i === idx) ? 'flex' : 'none'; }
+    document.querySelectorAll('.footer-item').forEach((btn, i) => btn.classList.toggle('active', i === idx));
+    document.querySelectorAll('.hidden-menu-item').forEach((el, i) => el.classList.toggle('active', i === idx));
+    const meta = TAB_META[idx];
+    const infoBtn = document.getElementById('global-info-btn');
+    if (infoBtn) { infoBtn.style.display = meta.infoEnabled ? 'flex' : 'none'; infoBtn.onclick = function () { toggleInfoPopup(meta.id); }; }
+    const showFilterHere = FILTER_ENABLED && !meta.isWelcome;
+    const filterBtn = document.getElementById('global-filter-btn');
+    if (filterBtn) { filterBtn.style.display = showFilterHere ? 'flex' : 'none'; filterBtn.onclick = function () { toggleFilterPanel(); }; }
+    const filterBtns = document.getElementById('global-filter-buttons');
+    if (filterBtns) { filterBtns.style.display = showFilterHere ? 'inline-flex' : 'none'; if (showFilterHere) mountAllIn(filterBtns); }
+    document.querySelectorAll('.info-popup').forEach(p => { if (p.id !== 'info-popup-' + meta.id) p.style.display = 'none'; });
+    if (!showFilterHere) {
+      const panel = document.getElementById('global-filter-panel');
+      const backdrop = document.getElementById('filter-backdrop');
+      if (panel) panel.classList.remove('open');
+      if (backdrop) backdrop.classList.remove('open');
+    }
+    recomputeHeaderHeight();
+  }
+  function nextTab(idx) { showTab(Math.min(idx + 1, TAB_COUNT - 1)); }
+  function prevTab(idx) { showTab(Math.max(idx - 1, 0)); }
+
+  function toggleExpand(objId) {
+    const el = document.getElementById('obj-' + objId);
+    if (!el) return;
+    const isMin = el.classList.contains('obj-minimized');
+    const expanding = !el.classList.contains('obj-expanded');
+    if (expanding) recomputeHeaderHeight();
+    el.classList.toggle('obj-expanded');
+    if (!isMin) {
+      const btn = el.querySelector('.obj-expand-btn');
+      if (btn) { btn.innerHTML = expanding ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M9 3v4a2 2 0 0 1-2 2H3M21 9h-4a2 2 0 0 1-2-2V3M3 15h4a2 2 0 0 1 2 2v4M15 21v-4a2 2 0 0 1 2-2h4"/></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>'; btn.setAttribute('aria-label', expanding ? 'Reducir' : 'Ampliar'); }
+    }
+  }
+  function toggleInfoPopup(tabId) {
+    const el = document.getElementById('info-popup-' + tabId);
+    if (el) el.style.display = (el.style.display === 'none' || !el.style.display) ? 'flex' : 'none';
+  }
+  function toggleFilterPanel() {
+    const el = document.getElementById('global-filter-panel');
+    const backdrop = document.getElementById('filter-backdrop');
+    const opening = el && !el.classList.contains('open');
+    if (el) el.classList.toggle('open');
+    if (backdrop) backdrop.classList.toggle('open');
+    if (opening) mountAllIn(el);
+  }
+  function toggleHiddenMenu() {
+    const el = document.getElementById('hidden-menu-panel');
+    const backdrop = document.getElementById('menu-backdrop');
+    if (el) el.classList.toggle('open');
+    if (backdrop) backdrop.classList.toggle('open');
+  }
+
+  const backdropEl = document.getElementById('filter-backdrop');
+  if (backdropEl) backdropEl.addEventListener('click', function () { const panel = document.getElementById('global-filter-panel'); if (panel) panel.classList.remove('open'); backdropEl.classList.remove('open'); });
+  const menuBtnEl = document.getElementById('global-menu-btn');
+  if (menuBtnEl) menuBtnEl.style.display = 'none';
+  showTab(0);
+  window.addEventListener('resize', recomputeHeaderHeight);
+  window.addEventListener('orientationchange', recomputeHeaderHeight);
+</script>
+</body>
+</html>
